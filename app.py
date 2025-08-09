@@ -9,7 +9,7 @@ import google.generativeai as genai
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
-    genai.configure(api_key="AIzaSyBZLfcHVV1Yj-ZcInkllfCH05G1R_KbUBs")
+    genai.configure(api_key=GEMINI_API_KEY)
 else:
     pass
 
@@ -18,19 +18,19 @@ def analyze_image_with_gemini(image: Image.Image):
     Analyzes an image with the Gemini model to detect chai and generate a comment.
     """
     if not GEMINI_API_KEY:
-        st.error("Aiyo, your GEMINI_API_KEY is missing lah. Create a .env file and put it there.")
+        st.error("Aiyo, your GEMINI_API_KEY is missing Daa. Create a .env file and put it there.")
         return "Cannot work without API key, boss."
 
     prompt = """
-    
-    You are a sarcastic Malayali friend from Kerala. Look at this image. Your task is to identify if it contains 'Chai' (tea) and make a sarcastic comment in Manglish (a mix of Malayalam and English).
+    You are a sarcastic Malayali friend from Kerala. Look at this image. Your task is to identify if it contains 'Chai' (tea) and make a sarcastic comment in Manglish.
+    Please use a mix of simple Malayalam and English words so that your comment is easy to understand, funny, and authentic.
 
     Your response MUST follow this format exactly:
     `Detection: <result> | Comment: <comment>`
 
     - `<result>` must be either `Chai` or `Not Chai`.
     - `<comment>`:
-        - If `<result>` is `Chai`, the comment must be a short, sarcastic, funny remark about the chai in Manglish.
+        - If `<result>` is `Chai`, the comment must be a short, sarcastic, funny remark about the chai.
         - If `<result>` is `Not Chai`, the comment must be a short, sarcastic, funny remark about what is in the picture instead.
 
     Example 1 (if it's chai):
@@ -46,7 +46,7 @@ def analyze_image_with_gemini(image: Image.Image):
     """
     try:
         model = genai.GenerativeModel('gemini-1.5-flash')
-        with st.spinner("Aiyo, analyzing lah... My brain also need to warm up..."):
+        with st.spinner("Aiyo, analyzing daa... My brain also need to warm up..."):
             response = model.generate_content([prompt, image])
 
             parts = response.text.strip().split('|')
