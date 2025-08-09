@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 from dotenv import load_dotenv
-import cv2
 from PIL import Image
 import google.generativeai as genai
 import re
@@ -12,6 +11,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key="AIzaSyBZLfcHVV1Yj-ZcInkllfCH05G1R_KbUBs")
 else:
+    # This will be handled gracefully in the UI.
     pass
 
 
@@ -54,7 +54,6 @@ def analyze_image_with_gemini(image: Image.Image):
         with st.spinner("Aiyo, analyzing daa... Let the judging begin..."):
             response = model.generate_content([prompt, image])
 
-            # Use regex for more robust parsing
             match = re.search(r"Rating:\s*(\d+)\s*\|\s*Comment:\s*(.*)", response.text, re.DOTALL)
             if match:
                 rating = int(match.group(1))
@@ -70,75 +69,52 @@ def analyze_image_with_gemini(image: Image.Image):
 
 # --- Main Application ---
 def main():
-    st.title("🤖 Chai-o-Meter ☕")
-    st.write("Is your chai a 5-star masterpiece or a 1-star disaster? Let the Ai judge decide!")
+    st.title("🤖 Gemini Chaya-o-Meter ☕")
+    st.write("Is your chai a 5-star masterpiece or a 1-star disaster? Let the Malayali judge decide!")
 
-    if 'run_camera' not in st.session_state:
-        st.session_state.run_camera = False
-    if 'latest_frame' not in st.session_state:
-        st.session_state.latest_frame = None
-    if 'analysis_result' not in st.session_state:
-        st.session_state.analysis_result = (0, "")  # Store as a tuple (rating, comment)
-
-    uploaded_file = st.file_uploader("Upload a chaya picture:", type=["jpg", "jpeg", "png"])
-
+    # --- Input Options ---
+    # We can use columns to place them side-by-side for a cleaner look.
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Start/Stop Camera"):
-            st.session_state.run_camera = not st.session_state.run_camera
-            st.session_state.analysis_result = (0, "")
+        uploaded_file = st.file_uploader("Upload a picture", label_visibility="collapsed", key="file_uploader")
+    with col2:
+        camera_photo = st.camera_input("Take a picture", label_visibility="collapsed", key="camera_input")
 
-    image_placeholder = st.empty()
-    rating_placeholder = st.empty()
-    comment_placeholder = st.empty()
-
+    # --- Analysis Trigger ---
+    # The logic is now much simpler. We process whichever input was last used.
+    image_to_analyze = None
     if uploaded_file is not None:
-        st.session_state.run_camera = False
-        image = Image.open(uploaded_file)
-        image_placeholder.image(image, caption="The evidence.", use_container_width=True)
+        # To prevent re-running analysis on every interaction after upload,
+        # we can use a session state flag.
+        if "last_uploaded_file" not in st.session_state or st.session_state.last_uploaded_file != uploaded_file.name:
+            st.session_state.last_uploaded_file = uploaded_file.name
+            st.session_state.last_camera_photo = None
+            image_to_analyze = Image.open(uploaded_file)
+            st.session_state.image_to_display = image_to_analyze
 
-        if st.button("Judge this Chai!"):
-            st.session_state.analysis_result = analyze_image_with_gemini(image)
+    if camera_photo is not None:
+        if "last_camera_photo" not in st.session_state or st.session_state.last_camera_photo != camera_photo.getvalue():
+            st.session_state.last_camera_photo = camera_photo.getvalue()
+            st.session_state.last_uploaded_file = None
+            image_to_analyze = Image.open(camera_photo)
+            st.session_state.image_to_display = image_to_analyze
 
-    elif st.session_state.run_camera:
-        with col2:
-            if st.button("Judge this Chai from Camera!"):
-                if st.session_state.latest_frame is not None:
-                    frame_rgb = cv2.cvtColor(st.session_state.latest_frame, cv2.COLOR_BGR2RGB)
-                    pil_image = Image.fromarray(frame_rgb)
-                    st.session_state.analysis_result = analyze_image_with_gemini(pil_image)
-                else:
-                    st.session_state.analysis_result = (0, "No frame captured yet. Wait a second.")
+    # --- Display and Analysis ---
+    if "image_to_display" in st.session_state and st.session_state.image_to_display is not None:
+        st.image(st.session_state.image_to_display, caption="The evidence for the judge.", use_container_width=True)
 
-        cap = cv2.VideoCapture(0)
-        if not cap.isOpened():
-            st.error("Cannot open camera. Check permissions, maybe?")
-        else:
-            while st.session_state.run_camera:
-                ret, frame = cap.read()
-                if not ret:
-                    st.error("Failed to capture frame. Your camera is shy, maybe?")
-                    break
+        # If a new image has been provided, run the analysis.
+        if image_to_analyze:
+            rating, comment = analyze_image_with_gemini(image_to_analyze)
+            st.session_state.analysis_result = (rating, comment)
 
-                st.session_state.latest_frame = frame
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                image_placeholder.image(frame_rgb, channels="RGB", caption="Live Camera Feed")
-
-            cap.release()
-    else:
-        image_placeholder.info("Your image or video will appear here for judgment.")
-        st.session_state.latest_frame = None
-
-    rating, comment = st.session_state.analysis_result
-    if comment:
-        if rating > 0:
-            rating_placeholder.subheader(f"Rating: {'⭐' * rating}")
-        else:
-            rating_placeholder.empty()
-        comment_placeholder.success(f"The Judge says: {comment}")
-    else:
-        rating_placeholder.empty()
-        comment_placeholder.empty()
+    # Display the result from session state.
+    if "analysis_result" in st.session_state:
+        rating, comment = st.session_state.analysis_result
+        if comment:
+            if rating > 0:
+                st.subheader(f"Rating: {'⭐' * rating}")
+            st.success(f"The Judge says: {comment}")
 
 
 if __name__ == "__main__":
