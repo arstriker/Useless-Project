@@ -69,8 +69,8 @@ def analyze_image_with_gemini(image: Image.Image):
 
 # --- Main Application ---
 def main():
-    st.title("🤖 Gemini Chaya-o-Meter ☕")
-    st.write("Is your chai a 5-star masterpiece or a 1-star disaster? Let the Malayali judge decide!")
+    st.title("🤖Chai-o-Meter ☕")
+    st.write("Is your chai a 5-star masterpiece or a 1-star disaster? Let the AI judge decide!")
 
     # --- Input Options ---
     # We can use columns to place them side-by-side for a cleaner look.
