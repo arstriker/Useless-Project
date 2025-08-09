@@ -5,13 +5,17 @@ from PIL import Image
 import google.generativeai as genai
 import re
 
+# --- Constants ---
+# TODO: User, please replace these placeholder URLs with direct links to your audio files (e.g., .mp3, .wav).
+GOOD_CHAI_SONG_URL = ""  # e.g., "https://example.com/good_song.mp3"
+BAD_CHAI_SONG_URL = "Sad Hamster Violin Meme (Full).mp3"  # e.g., "https://example.com/bad_song.mp3"
+
 # --- Gemini Configuration ---
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
-    genai.configure(api_key="AIzaSyBZLfcHVV1Yj-ZcInkllfCH05G1R_KbUBs")
+    genai.configure(api_key=GEMINI_API_KEY)
 else:
-    # This will be handled gracefully in the UI.
     pass
 
 
@@ -69,52 +73,49 @@ def analyze_image_with_gemini(image: Image.Image):
 
 # --- Main Application ---
 def main():
-    st.title("🤖Chai-o-Meter ☕")
-    st.write("Is your chai a 5-star masterpiece or a 1-star disaster? Let the AI judge decide!")
+    st.title("🤖 Gemini Chaya-o-Meter ☕")
+    st.write("Is your chai a 5-star masterpiece or a 1-star disaster? Let the Malayali judge decide!")
 
-    # --- Input Options ---
-    # We can use columns to place them side-by-side for a cleaner look.
+    if "analysis_result" not in st.session_state:
+        st.session_state.analysis_result = (0, "")
+
     col1, col2 = st.columns(2)
     with col1:
         uploaded_file = st.file_uploader("Upload a picture", label_visibility="collapsed", key="file_uploader")
     with col2:
         camera_photo = st.camera_input("Take a picture", label_visibility="collapsed", key="camera_input")
 
-    # --- Analysis Trigger ---
-    # The logic is now much simpler. We process whichever input was last used.
     image_to_analyze = None
-    if uploaded_file is not None:
-        # To prevent re-running analysis on every interaction after upload,
-        # we can use a session state flag.
-        if "last_uploaded_file" not in st.session_state or st.session_state.last_uploaded_file != uploaded_file.name:
-            st.session_state.last_uploaded_file = uploaded_file.name
-            st.session_state.last_camera_photo = None
-            image_to_analyze = Image.open(uploaded_file)
-            st.session_state.image_to_display = image_to_analyze
+    if uploaded_file:
+        image_to_analyze = Image.open(uploaded_file)
+    elif camera_photo:
+        image_to_analyze = Image.open(camera_photo)
 
-    if camera_photo is not None:
-        if "last_camera_photo" not in st.session_state or st.session_state.last_camera_photo != camera_photo.getvalue():
-            st.session_state.last_camera_photo = camera_photo.getvalue()
-            st.session_state.last_uploaded_file = None
-            image_to_analyze = Image.open(camera_photo)
-            st.session_state.image_to_display = image_to_analyze
-
-    # --- Display and Analysis ---
-    if "image_to_display" in st.session_state and st.session_state.image_to_display is not None:
-        st.image(st.session_state.image_to_display, caption="The evidence for the judge.", use_container_width=True)
-
-        # If a new image has been provided, run the analysis.
-        if image_to_analyze:
+    if image_to_analyze:
+        st.image(image_to_analyze, caption="The evidence for the judge.", use_container_width=True)
+        # Run analysis when a new image is provided
+        if "last_image" not in st.session_state or st.session_state.last_image != image_to_analyze:
+            st.session_state.last_image = image_to_analyze
             rating, comment = analyze_image_with_gemini(image_to_analyze)
             st.session_state.analysis_result = (rating, comment)
 
-    # Display the result from session state.
-    if "analysis_result" in st.session_state:
-        rating, comment = st.session_state.analysis_result
-        if comment:
-            if rating > 0:
-                st.subheader(f"Rating: {'⭐' * rating}")
-            st.success(f"The Judge says: {comment}")
+    rating, comment = st.session_state.analysis_result
+    if comment:
+        if rating > 0:
+            st.subheader(f"Rating: {'⭐' * rating}")
+        st.success(f"The Judge says: {comment}")
+
+        # Play audio based on the rating
+        if rating >= 3:
+            if GOOD_CHAI_SONG_URL:
+                st.audio(GOOD_CHAI_SONG_URL, autoplay=True)
+            else:
+                st.info("Note: Add a URL for a 'good chai' song to hear music!")
+        elif rating > 0:  # This covers 1 and 2 star ratings
+            if BAD_CHAI_SONG_URL:
+                st.audio(BAD_CHAI_SONG_URL, autoplay=True)
+            else:
+                st.info("Note: Add a URL for a 'bad chai' song to hear music!")
 
 
 if __name__ == "__main__":
