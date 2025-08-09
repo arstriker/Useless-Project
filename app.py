@@ -14,7 +14,7 @@ BAD_CHAI_SONG_URL = "Sad Hamster Violin Meme (Full).mp3"  # e.g., "https://examp
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+    genai.configure(api_key="AIzaSyBZLfcHVV1Yj-ZcInkllfCH05G1R_KbUBs")
 else:
     pass
 
@@ -73,8 +73,8 @@ def analyze_image_with_gemini(image: Image.Image):
 
 # --- Main Application ---
 def main():
-    st.title("🤖 Gemini Chaya-o-Meter ☕")
-    st.write("Is your chai a 5-star masterpiece or a 1-star disaster? Let the Malayali judge decide!")
+    st.title("🤖 Chai-o-Meter ☕")
+    st.write("Is your chai a 5-star masterpiece or a 1-star disaster? Let the AI judge decide!")
 
     if "analysis_result" not in st.session_state:
         st.session_state.analysis_result = (0, "")
