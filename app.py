@@ -7,7 +7,7 @@ import re
 
 # --- Constants ---
 # TODO: User, please replace these placeholder URLs with direct links to your audio files (e.g., .mp3, .wav).
-GOOD_CHAI_SONG_URL = ""  # e.g., "https://example.com/good_song.mp3"
+GOOD_CHAI_SONG_URL = "Sad Hamster Violin Meme (Full).mp3"  # e.g., "https://example.com/good_song.mp3"
 BAD_CHAI_SONG_URL = "Sad Hamster Violin Meme (Full).mp3"  # e.g., "https://example.com/bad_song.mp3"
 
 # --- Gemini Configuration ---
