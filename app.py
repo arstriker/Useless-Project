@@ -9,7 +9,7 @@ import google.generativeai as genai
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+    genai.configure(api_key="AIzaSyBZLfcHVV1Yj-ZcInkllfCH05G1R_KbUBs")
 else:
     pass
 
@@ -22,6 +22,7 @@ def analyze_image_with_gemini(image: Image.Image):
         return "Cannot work without API key, boss."
 
     prompt = """
+    
     You are a sarcastic Malayali friend from Kerala. Look at this image. Your task is to identify if it contains 'Chai' (tea) and make a sarcastic comment in Manglish (a mix of Malayalam and English).
 
     Your response MUST follow this format exactly:
