@@ -1,1 +1,0 @@
-# Lets build Similarity checker
