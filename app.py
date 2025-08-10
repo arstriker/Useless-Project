@@ -14,7 +14,7 @@ BAD_CHAI_SONG_URL = "Sad Hamster Violin Meme (Full).mp3"  # e.g., "https://examp
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
-    genai.configure(api_key="AIzaSyBZLfcHVV1Yj-ZcInkllfCH05G1R_KbUBs")
+    genai.configure(api_key=st.secrets["Apikey"])
 else:
     pass
 
